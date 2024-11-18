@@ -20,12 +20,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.locatorapp.ui.components.LocationInfo
 import com.example.locatorapp.ui.components.LocationItem
 import com.example.locatorapp.ui.components.favIconButton
@@ -48,7 +52,12 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
     val marker by remember { viewModel.marker }
     val cameraPositionState = rememberCameraPositionState()
 
-    viewModel.getLocations()
+    val lifeCycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(viewModel) {
+        lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.getLocations()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -66,7 +75,7 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                         },
                         trailingIcon = {
                             Row {
-                                IconButton(onClick = { query = "" }) {
+                                IconButton(onClick = { viewModel.setQuery() }) {
                                     Icon(
                                         imageVector = Icons.Default.Clear,
                                         contentDescription = "Close info",
@@ -74,8 +83,9 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                                     )
                                 }
 
-                                favIconButton(isFavorite = false) {
-                                    favFilter = !favFilter
+                                favIconButton(isFavorite = favFilter) {
+                                    viewModel.updateSearchState(true)
+                                    viewModel.setFavFilter()
                                 }
                             }
                         }
@@ -86,12 +96,10 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                 onExpandedChange = { viewModel.updateSearchState(it) }
             ) {
                 LazyColumn {
-                    items(locations) {
+                    items(viewModel.filteredLocations(locations, query, favFilter)) {
                         LocationItem(
                             it,
-                            onFavClick = {
-                                favFilter = !favFilter
-                            }
+                            onFavClick = { viewModel.saveToFavorites(it) }
                         ) {
                             viewModel.updateMarkerPosition(cameraPositionState, it)
                             viewModel.updateSearchState(false)
@@ -104,7 +112,7 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
             LocationInfo(
                 marker,
                 onFavClick = {
-                    viewModel.setFavState()
+                    marker?.let { viewModel.saveToFavorites(it) }
                 }
             ) {
                 viewModel.updateMarkerPosition(cameraPositionState)
@@ -112,12 +120,12 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
         }
     ) {
         GoogleMap(
-            //modifier = Modifier.height(0.dp),
             cameraPositionState = cameraPositionState,
             uiSettings = MapUiSettings(zoomControlsEnabled = false),
             onMapClick = {
                 viewModel.updateSearchState(false)
-            }) {
+            }
+        ) {
             marker?.let {
                 val position = LatLng(it.latitude, it.longitude)
                 Marker(

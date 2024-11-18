@@ -8,5 +8,5 @@ class GetLocationsUseCase @Inject constructor(
     private val repository: LocationRepositoryImpl
 ) {
 
-    suspend operator fun invoke(): List<LocationModel> = repository.getAllLocationsFromRemote()
+    suspend operator fun invoke(): List<LocationModel> = repository.getAllLocations()
 }
