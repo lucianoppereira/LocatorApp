@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.locatorapp.ui.base.LocatorAppUi
+import com.example.locatorapp.ui.base.isWideDisplay
 import com.example.locatorapp.ui.layout.LocatorNarrowLayout
 import com.example.locatorapp.ui.theme.LocatorAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +24,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LocatorNarrowLayout()
+                    val isWideDisplay = isWideDisplay(this)
+                    LocatorAppUi(isWideDisplay = isWideDisplay)
                 }
             }
         }
