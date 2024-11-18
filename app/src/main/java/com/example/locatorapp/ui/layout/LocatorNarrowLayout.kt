@@ -2,6 +2,7 @@
 
 package com.example.locatorapp.ui.layout
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,7 +30,14 @@ import com.example.locatorapp.ui.components.LocationInfo
 import com.example.locatorapp.ui.components.LocationItem
 import com.example.locatorapp.ui.components.favIconButton
 import com.example.locatorapp.ui.viewmodel.LocationScreenViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
 
@@ -37,6 +45,8 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
     var query by remember { viewModel.query }
     var active by remember { viewModel.searchBarState }
     var favFilter by remember { viewModel.favFilterState }
+    val marker by remember { viewModel.marker }
+    val cameraPositionState = rememberCameraPositionState()
 
     viewModel.getLocations()
 
@@ -52,9 +62,7 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                         placeholder = { Text(text = "Search") },
                         onExpandedChange = { viewModel.updateSearchState(it) },
                         leadingIcon = {
-                            IconButton(onClick = { /*TODO*/ }) {
-                                Icon(imageVector = Icons.Default.Search, contentDescription = "")
-                            }
+                            Icon(imageVector = Icons.Default.Search, contentDescription = "")
                         },
                         trailingIcon = {
                             Row {
@@ -85,21 +93,39 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                                 favFilter = !favFilter
                             }
                         ) {
+                            viewModel.updateMarkerPosition(cameraPositionState, it)
+                            viewModel.updateSearchState(false)
                         }
                     }
                 }
             }
         },
         bottomBar = {
-            //LocationInfo(
-            //    location,
-            //    onFavClick = {
-            //        viewModel.setFavState()
-            //    }
-            //) {
-            //}
+            LocationInfo(
+                marker,
+                onFavClick = {
+                    viewModel.setFavState()
+                }
+            ) {
+                viewModel.updateMarkerPosition(cameraPositionState)
+            }
         }
     ) {
-
+        GoogleMap(
+            //modifier = Modifier.height(0.dp),
+            cameraPositionState = cameraPositionState,
+            uiSettings = MapUiSettings(zoomControlsEnabled = false),
+            onMapClick = {
+                viewModel.updateSearchState(false)
+            }) {
+            marker?.let {
+                val position = LatLng(it.latitude, it.longitude)
+                Marker(
+                    state = MarkerState(position),
+                    title = it.title,
+                    snippet = it.subtitle
+                )
+            }
+        }
     }
 }

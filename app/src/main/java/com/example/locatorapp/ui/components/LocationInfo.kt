@@ -41,7 +41,7 @@ fun LocationInfo(location: LocationModel?, onFavClick: () -> Unit, onClose: () -
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
-                .padding(start = 24.dp, bottom = 16.dp)
+                .padding(bottom = 16.dp)
             ) {
                 Row(modifier = Modifier
                     .fillMaxWidth(),
@@ -63,7 +63,7 @@ fun LocationInfo(location: LocationModel?, onFavClick: () -> Unit, onClose: () -
                     fontSize = 24.sp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(horizontal = 24.dp, vertical = 4.dp)
                 )
 
                 Text(
@@ -73,7 +73,7 @@ fun LocationInfo(location: LocationModel?, onFavClick: () -> Unit, onClose: () -
                     color = Color.LightGray,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(horizontal = 24.dp, vertical = 4.dp)
                 )
             }
         }
