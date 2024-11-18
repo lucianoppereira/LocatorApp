@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.locatorapp.domain.model.LocationModel
+import com.example.locatorapp.domain.model.Resource
 import com.example.locatorapp.domain.usecase.GetLocationsUseCase
 import com.example.locatorapp.domain.usecase.SaveLocationUseCase
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -26,8 +27,11 @@ class LocationScreenViewModel @Inject constructor(
     private var _marker = mutableStateOf<LocationModel?>(null)
     val marker = _marker
 
-    private var _searchBarState = mutableStateOf(false)
-    val searchBarState = _searchBarState
+    private var _searchBarActive = mutableStateOf(false)
+    val searchBarActive = _searchBarActive
+
+    private var _searchState = mutableStateOf<Boolean?>(null)
+    val searchState = _searchState
 
     private var _query = mutableStateOf("")
     val query = _query
@@ -37,8 +41,18 @@ class LocationScreenViewModel @Inject constructor(
 
     fun getLocations() {
         viewModelScope.launch(Dispatchers.IO) {
-            val result = getLocationsUseCase.invoke()
-            _locations.value = result.sortedBy { it.title }
+            getLocationsUseCase().collect { result ->
+                when(result) {
+                    is Resource.Success -> {
+                        result.data?.let {
+                            _searchState.value = true
+                            _locations.value = result.data.sortedBy { it.title }
+                        }
+                    }
+                    is Resource.Error -> { _searchState.value = false }
+                    else -> { _searchState.value = null }
+                }
+            }
         }
     }
 
@@ -53,13 +67,6 @@ class LocationScreenViewModel @Inject constructor(
         }
 
         return if (favFilter) filteredLocations.filter { it.isFavorite } else filteredLocations
-    }
-
-    fun getFavoriteLocations() {
-        viewModelScope.launch {
-            val result = getLocationsUseCase.invoke()
-            _locations.value = result.sortedBy { it.title }
-        }
     }
 
     fun saveToFavorites(location: LocationModel) {
@@ -79,12 +86,11 @@ class LocationScreenViewModel @Inject constructor(
 
     fun setFavFilter() {
         _favFilterState.value = !_favFilterState.value
-        if (favFilterState.value) getFavoriteLocations() else getLocations()
     }
 
     fun updateSearchState(state: Boolean) {
         viewModelScope.launch {
-            _searchBarState.value = state
+            _searchBarActive.value = state
         }
     }
 

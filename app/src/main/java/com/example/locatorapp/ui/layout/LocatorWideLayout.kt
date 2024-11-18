@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -28,8 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.locatorapp.ui.components.ErrorMessage
+import com.example.locatorapp.ui.components.LoadingSpinner
 import com.example.locatorapp.ui.components.LocationInfo
-import com.example.locatorapp.ui.components.LocationItem
+import com.example.locatorapp.ui.components.LocationList
 import com.example.locatorapp.ui.components.favIconButton
 import com.example.locatorapp.ui.viewmodel.LocationScreenViewModel
 import com.google.android.gms.maps.model.LatLng
@@ -47,6 +47,7 @@ fun LocatorWideLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
     val locations by remember { viewModel.locations }
     var query by remember { viewModel.query }
     var favFilter by remember { viewModel.favFilterState }
+    var searchState by remember { viewModel.searchState }
     val marker by remember { viewModel.marker }
     val cameraPositionState = rememberCameraPositionState()
 
@@ -95,18 +96,15 @@ fun LocatorWideLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                 expanded = true,
                 onExpandedChange = { viewModel.updateSearchState(it) }
             ) {
-                LazyColumn {
-                    items(viewModel.filteredLocations(locations, query, favFilter)) {
-                        LocationItem(
-                            it,
-                            onFavClick = {
-                                viewModel.saveToFavorites(it)
-                            }
-                        ) {
-                            viewModel.updateMarkerPosition(cameraPositionState, it)
-                            viewModel.updateSearchState(false)
-                        }
-                    }
+                LoadingSpinner(searchState == null)
+                ErrorMessage(searchState == false)
+                LocationList(
+                    viewModel.filteredLocations(locations, query, favFilter),
+                    searchState == true,
+                    onFavClick = { viewModel.saveToFavorites(it) }
+                ) {
+                    viewModel.updateMarkerPosition(cameraPositionState, it)
+                    viewModel.updateSearchState(false)
                 }
             }
         }
