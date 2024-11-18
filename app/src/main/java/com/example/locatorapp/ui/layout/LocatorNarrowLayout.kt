@@ -20,44 +20,19 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.locatorapp.domain.model.LocationModel
 import com.example.locatorapp.ui.components.LocationInfo
 import com.example.locatorapp.ui.components.LocationItem
 import com.example.locatorapp.ui.components.favIconButton
 import com.example.locatorapp.ui.viewmodel.LocationScreenViewModel
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 
 @Composable
 fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
 
-    mutableStateOf(
-        listOf(
-            LocationModel(
-                "title",
-                "substitle",
-                1.1111,
-                1.2222,
-                false
-            ),
-            LocationModel(
-                "title",
-                "substitle",
-                1.1111,
-                1.2222,
-                false
-            )
-        )
-    )
     val locations by remember { viewModel.locations }
     var query by remember { viewModel.query }
     var active by remember { viewModel.searchBarState }
@@ -72,10 +47,10 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                     SearchBarDefaults.InputField(
                         query = query,
                         onQueryChange = { query = it },
-                        onSearch = {},
+                        onSearch = { viewModel.updateSearchState(false) },
                         expanded = active,
                         placeholder = { Text(text = "Search") },
-                        onExpandedChange = {},
+                        onExpandedChange = { viewModel.updateSearchState(it) },
                         leadingIcon = {
                             IconButton(onClick = { /*TODO*/ }) {
                                 Icon(imageVector = Icons.Default.Search, contentDescription = "")
@@ -100,7 +75,7 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
                 },
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 expanded = active,
-                onExpandedChange = {}
+                onExpandedChange = { viewModel.updateSearchState(it) }
             ) {
                 LazyColumn {
                     items(locations) {
@@ -116,13 +91,13 @@ fun LocatorNarrowLayout(viewModel: LocationScreenViewModel = hiltViewModel()) {
             }
         },
         bottomBar = {
-            LocationInfo(
-                locations.first(),
-                onFavClick = {
-                    viewModel.setFavState()
-                }
-            ) {
-            }
+            //LocationInfo(
+            //    location,
+            //    onFavClick = {
+            //        viewModel.setFavState()
+            //    }
+            //) {
+            //}
         }
     ) {
 
