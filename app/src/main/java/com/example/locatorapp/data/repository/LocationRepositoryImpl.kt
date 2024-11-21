@@ -15,11 +15,11 @@ class LocationRepositoryImpl @Inject constructor(
 ) : LocalStorageRepository {
 
     suspend fun getAllLocations(): List<LocationModel> {
-        if (getAllLocationsFromLocal().isNullOrEmpty()) {
+        return getAllLocationsFromLocal().ifEmpty {
             val locations = getAllLocationsFromRemote()
             saveAllLocations(locations)
+            locations
         }
-        return getAllLocationsFromLocal()
     }
 
     suspend fun getAllLocationsFromRemote(): List<LocationModel> =
@@ -52,10 +52,10 @@ class LocationRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAllLocationsFromLocal(): List<LocationModel> {
-        try {
-            return locationDao.getAllLocations().map { it.toLocationModel() }
+        return try {
+            locationDao.getAllLocations().map { it.toLocationModel() }
         } catch (e: Exception) {
-            throw e
+            emptyList()
         }
     }
 
